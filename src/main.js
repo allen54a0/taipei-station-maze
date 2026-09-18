@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   LEVELS, NODES, EDGES, NODE_MAP, LEVEL_MAP, LINE_COLORS,
 } from './data/graph.js';
+import { findPath } from './pathfind.js';
 
 // 1 單位 = 5 公尺
 const STATION_W = 180;
@@ -59,8 +60,35 @@ scene.add(grid);
 populateLegend();
 setupRaycaster();
 
+// ---------------- Path 群組 + 狀態 ----------------
+const pathGroup = new THREE.Group();
+pathGroup.name = 'path';
+scene.add(pathGroup);
+
+/** @type {{ curve: THREE.Curve, t: number, speed: number, marker: THREE.Mesh } | null} */
+let pathAnim = null;
+
+populatePathSelects();
+setupPathfinderUI();
+runFind();   // 開場預設就顯示一條路徑
+
 // ---------------- Loop / Resize ----------------
+let lastTime = performance.now();
+
 function tick() {
+  const now = performance.now();
+  const dt = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+
+  if (pathAnim) {
+    pathAnim.t += pathAnim.speed * dt;
+    if (pathAnim.t > 1.15) pathAnim.t = -0.05;      // 循環,兩端各留短暫停頓
+    const tt = Math.max(0, Math.min(1, pathAnim.t));
+    pathAnim.curve.getPointAt(tt, pathAnim.marker.position);
+    // 微微上下浮動,讓亮點看起來活的
+    pathAnim.marker.position.y += Math.sin(now * 0.005) * 0.4;
+  }
+
   controls.update();
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
@@ -73,10 +101,12 @@ addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// 開發用：暴露主要物件到 window 方便 devtools 除錯
-window.__tsm = { scene, camera, renderer, nodesGroup, controls, THREE };
+// 開發除錯用
+window.__tsm = { scene, camera, renderer, nodesGroup, pathGroup, controls, THREE, findPath };
 
-// ================ Builders ================
+// =====================================================================
+// Builders
+// =====================================================================
 
 function buildFloors() {
   const group = new THREE.Group();
@@ -137,7 +167,6 @@ function buildNodes() {
       color = 0xffffff;
       emissive = 0x224466;
     } else {
-      // hall / transfer / stair
       geo = hallGeo;
       color = 0xddddff;
       emissive = 0x334477;
@@ -152,7 +181,6 @@ function buildNodes() {
     sphere.name = `node-${node.id}`;
     nodesGroup.add(sphere);
 
-    // 只給月台常駐標籤（其他用 hover tooltip 避免視覺擁擠）
     if (node.type === 'platform') {
       const label = makeLabelSprite(node.name, color, 30);
       label.position.set(node.pos[0], level.y + 4.5, node.pos[1]);
@@ -184,14 +212,16 @@ function buildEdges() {
   geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
 
   const mat = new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.6,
+    vertexColors: true, transparent: true, opacity: 0.55,
   });
   const lines = new THREE.LineSegments(geo, mat);
   lines.name = 'edges';
   scene.add(lines);
 }
 
-// ---------------- Raycaster + Tooltip ----------------
+// =====================================================================
+// Raycaster + Tooltip
+// =====================================================================
 
 function setupRaycaster() {
   const raycaster = new THREE.Raycaster();
@@ -249,6 +279,164 @@ function setupRaycaster() {
   }
 }
 
+// =====================================================================
+// Pathfinder UI
+// =====================================================================
+
+function populatePathSelects() {
+  const fromEl = document.querySelector('#from-select');
+  const toEl   = document.querySelector('#to-select');
+  const opts = NODES.map(n => {
+    const lv = LEVEL_MAP[n.level];
+    return `<option value="${n.id}">${lv.name} · ${n.name}</option>`;
+  }).join('');
+  fromEl.innerHTML = `<option value="">— 選擇起點 —</option>` + opts;
+  toEl.innerHTML   = `<option value="">— 選擇終點 —</option>` + opts;
+
+  // 一個有趣的預設(機捷 A1 月台 → 淡水信義線 R 月台南端)
+  fromEl.value = 'a1-plat';
+  toEl.value   = 'r-plat-s';
+}
+
+function setupPathfinderUI() {
+  document.querySelector('#find-btn').addEventListener('click', runFind);
+  document.querySelector('#clear-btn').addEventListener('click', clearPath);
+  document.querySelector('#from-select').addEventListener('change', autoFind);
+  document.querySelector('#to-select').addEventListener('change', autoFind);
+}
+
+function autoFind() {
+  const f = document.querySelector('#from-select').value;
+  const t = document.querySelector('#to-select').value;
+  if (f && t) runFind();
+}
+
+function runFind() {
+  const fromId = document.querySelector('#from-select').value;
+  const toId   = document.querySelector('#to-select').value;
+  if (!fromId || !toId) {
+    showResultMessage('請選擇起點與終點', 'warn');
+    return;
+  }
+  const result = findPath(fromId, toId);
+  if (!result) {
+    showResultMessage('找不到路徑（節點未連通）', 'warn');
+    return;
+  }
+  drawPath(result);
+  renderSteps(result);
+}
+
+function drawPath(result) {
+  clearPathScene();
+  const points = result.path.map(id => nodePosVec3(id)).filter(Boolean);
+  if (points.length < 2) return;
+
+  // 用 CatmullRomCurve3 平滑一點,再拉成 Tube
+  const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.15);
+  const segments = Math.max(64, points.length * 12);
+  const tubeGeo = new THREE.TubeGeometry(curve, segments, 0.9, 10, false);
+  const tubeMat = new THREE.MeshStandardMaterial({
+    color: 0x66ff99,
+    emissive: 0x33cc66,
+    emissiveIntensity: 1.0,
+    roughness: 0.35,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.88,
+  });
+  const tube = new THREE.Mesh(tubeGeo, tubeMat);
+  tube.renderOrder = 100;
+  pathGroup.add(tube);
+
+  // 動畫亮點
+  const markerGeo = new THREE.SphereGeometry(2.5, 20, 14);
+  const markerMat = new THREE.MeshStandardMaterial({
+    color: 0xffffcc,
+    emissive: 0xffee66,
+    emissiveIntensity: 2.2,
+  });
+  const marker = new THREE.Mesh(markerGeo, markerMat);
+  marker.position.copy(points[0]);
+  marker.renderOrder = 101;
+  pathGroup.add(marker);
+
+  // 起終點光暈
+  addHalo(points[0],                    0x00ff88);
+  addHalo(points[points.length - 1],    0xff6644);
+
+  pathAnim = { curve, t: 0, speed: 0.35, marker };
+}
+
+function addHalo(pos, color) {
+  const geo = new THREE.RingGeometry(3.8, 5.2, 32);
+  const mat = new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity: 0.7,
+    side: THREE.DoubleSide, depthTest: false,
+  });
+  const ring = new THREE.Mesh(geo, mat);
+  ring.position.copy(pos);
+  ring.rotation.x = -Math.PI / 2;
+  ring.renderOrder = 500;
+  pathGroup.add(ring);
+}
+
+function clearPath() {
+  clearPathScene();
+  const el = document.querySelector('#path-result');
+  el.hidden = true;
+}
+
+function clearPathScene() {
+  while (pathGroup.children.length > 0) {
+    const c = pathGroup.children[0];
+    pathGroup.remove(c);
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  }
+  pathAnim = null;
+}
+
+function renderSteps(result) {
+  const el = document.querySelector('#path-result');
+  const summary = el.querySelector('.result-summary');
+  const list = el.querySelector('.result-steps');
+
+  const meters = result.totalCost * 5;                 // 1 單位 = 5 m
+  const minutes = (meters / 1.2 / 60).toFixed(1);      // 步行 1.2 m/s
+  summary.textContent = `${result.path.length - 1} 段 · 約 ${meters} 公尺 · 步行約 ${minutes} 分鐘`;
+
+  list.innerHTML = result.edges.map((e, i) => {
+    const from = NODE_MAP[result.path[i]];
+    const to   = NODE_MAP[result.path[i + 1]];
+    return `<li>${from.name}<span class="step-verb">${verbOf(e.type)}</span>${to.name}</li>`;
+  }).join('');
+  el.hidden = false;
+}
+
+function showResultMessage(msg, kind) {
+  const el = document.querySelector('#path-result');
+  const summary = el.querySelector('.result-summary');
+  const list = el.querySelector('.result-steps');
+  summary.textContent = (kind === 'warn' ? '⚠️ ' : '') + msg;
+  list.innerHTML = '';
+  el.hidden = false;
+}
+
+function verbOf(t) {
+  return ({
+    walk: '→ 走 →', gate: '→ 過閘 →',
+    escalator: '→ 電扶梯 →', stair: '→ 樓梯 →',
+  })[t] ?? '→';
+}
+
+function nodePosVec3(nodeId) {
+  const n = NODE_MAP[nodeId];
+  if (!n) return null;
+  const y = LEVEL_MAP[n.level].y;
+  return new THREE.Vector3(n.pos[0], y, n.pos[1]);
+}
+
 function labelType(t) {
   return ({
     platform: '月台', hall: '大廳', gate: '閘門',
@@ -257,7 +445,9 @@ function labelType(t) {
   })[t] ?? t;
 }
 
-// ---------------- Helpers ----------------
+// =====================================================================
+// Helpers
+// =====================================================================
 
 function makeLabelSprite(text, color, fontPx = 64) {
   const cv = document.createElement('canvas');

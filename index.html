@@ -16,10 +16,24 @@
         <p class="subtitle">MVP · 核心樞紐 B4 ~ 2F · 30 節點</p>
       </header>
 
+      <section id="pathfinder">
+        <h2>路徑規劃</h2>
+        <label>起點<select id="from-select"></select></label>
+        <label>終點<select id="to-select"></select></label>
+        <div class="pathfinder-actions">
+          <button id="find-btn" type="button">找路徑</button>
+          <button id="clear-btn" type="button" class="secondary">清除</button>
+        </div>
+        <div id="path-result" hidden>
+          <div class="result-summary"></div>
+          <ol class="result-steps"></ol>
+        </div>
+      </section>
+
       <section id="controls">
         <p class="hint">
           🖱 左鍵拖曳：旋轉　·　右鍵：平移　·　滾輪：縮放<br />
-          💡 <b>滑鼠移到節點球</b>會顯示名稱與樓層資訊
+          💡 <b>滑鼠移到節點球</b>顯示名稱與樓層資訊
         </p>
       </section>
 
@@ -28,6 +42,7 @@
         <ul>
           <li><span class="line-swatch line-walk"></span>水平走道（同層）</li>
           <li><span class="line-swatch line-vert"></span>垂直（電扶梯／樓梯）</li>
+          <li><span class="line-swatch line-path"></span>最短路徑</li>
         </ul>
       </section>
 
@@ -37,7 +52,7 @@
       </section>
 
       <footer>
-        <small>階段二：節點資料建圖（尋路演算法尚未實作 — 階段三）</small>
+        <small>階段三：Dijkstra 尋路 + 路徑動畫</small>
       </footer>
     </aside>
 
