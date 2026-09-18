@@ -13,11 +13,22 @@
     <aside id="ui">
       <header>
         <h1>台北車站 3D 迷宮</h1>
-        <p class="subtitle">MVP · 核心樞紐 B4 ~ 2F</p>
+        <p class="subtitle">MVP · 核心樞紐 B4 ~ 2F · 30 節點</p>
       </header>
 
       <section id="controls">
-        <p class="hint">滑鼠左鍵拖曳：旋轉　·　右鍵：平移　·　滾輪：縮放</p>
+        <p class="hint">
+          🖱 左鍵拖曳：旋轉　·　右鍵：平移　·　滾輪：縮放<br />
+          💡 <b>滑鼠移到節點球</b>會顯示名稱與樓層資訊
+        </p>
+      </section>
+
+      <section id="edge-legend">
+        <h2>連通線</h2>
+        <ul>
+          <li><span class="line-swatch line-walk"></span>水平走道（同層）</li>
+          <li><span class="line-swatch line-vert"></span>垂直（電扶梯／樓梯）</li>
+        </ul>
       </section>
 
       <section id="legend">
@@ -26,9 +37,11 @@
       </section>
 
       <footer>
-        <small>階段一：骨架驗證（尋路 UI 尚未實作）</small>
+        <small>階段二：節點資料建圖（尋路演算法尚未實作 — 階段三）</small>
       </footer>
     </aside>
+
+    <div id="tooltip" role="tooltip" aria-hidden="true"></div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -5,6 +5,7 @@
   --border: rgba(120, 160, 255, 0.28);
   --text: #e6ecff;
   --muted: rgba(230, 236, 255, 0.62);
+  --divider: rgba(120, 160, 255, 0.12);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang TC",
     "Microsoft JhengHei", "Noto Sans TC", sans-serif;
 }
@@ -28,13 +29,14 @@ html, body {
   height: 100vh;
 }
 
+/* ---------------- 側邊 UI 面板 ---------------- */
 #ui {
   position: fixed;
   top: 16px;
   left: 16px;
   z-index: 10;
-  min-width: 260px;
-  max-width: 320px;
+  min-width: 280px;
+  max-width: 340px;
   padding: 16px 18px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -59,12 +61,12 @@ html, body {
 #ui section {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(120, 160, 255, 0.12);
+  border-top: 1px solid var(--divider);
 }
 
 #ui section h2 {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -73,17 +75,18 @@ html, body {
 
 #ui .hint {
   margin: 0;
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.7;
 }
 
-#legend-list {
+#ui section ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* ---------------- 樓層圖例 ---------------- */
 #legend-list li {
   display: flex;
   align-items: center;
@@ -110,10 +113,87 @@ html, body {
   font-size: 11px;
 }
 
+/* ---------------- 邊圖例 ---------------- */
+#edge-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.line-swatch {
+  width: 22px;
+  height: 2px;
+  flex-shrink: 0;
+}
+
+.line-swatch.line-walk { background: #66aaff; }
+.line-swatch.line-vert { background: #ffcc66; }
+
+/* ---------------- Footer ---------------- */
 #ui footer {
   margin-top: 14px;
   padding-top: 10px;
-  border-top: 1px solid rgba(120, 160, 255, 0.12);
+  border-top: 1px solid var(--divider);
   color: var(--muted);
   font-size: 10px;
 }
+
+/* ---------------- Tooltip ---------------- */
+#tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  padding: 8px 12px;
+  background: rgba(15, 22, 45, 0.94);
+  border: 1px solid rgba(120, 160, 255, 0.4);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  z-index: 20;
+  opacity: 0;
+  transform: translate(14px, -100%) translateY(-8px);
+  transition: opacity 100ms ease;
+  max-width: 260px;
+  white-space: normal;
+}
+
+#tooltip.visible { opacity: 1; }
+
+#tooltip .t-name {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+#tooltip .t-meta {
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+#tooltip .t-lines {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+#tooltip .tag {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+/* 五條線色（同 LINE_COLORS 定義） */
+#tooltip .tag-tra  { background: #005599; }
+#tooltip .tag-thsr { background: #ff6600; color: #000; }
+#tooltip .tag-bl   { background: #0070bd; }
+#tooltip .tag-r    { background: #e3002c; }
+#tooltip .tag-a    { background: #612e91; }
