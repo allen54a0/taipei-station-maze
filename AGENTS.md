@@ -13,8 +13,8 @@
 - [x] 階段一：Vite + Three.js 環境、半透明樓層 Box 疊出 6 層樓場景 ✅ 2026-09-18
 - [x] 階段二：節點資料建圖（`src/data/graph.js`）——30 節點 + 37 邊 + hover tooltip ✅ 2026-09-18
 - [x] 階段三：Dijkstra 尋路 + Tube 路徑高亮 + 亮點動畫 ✅ 2026-09-18
-- [~] 階段四：UI（起點/終點下拉 ✅、路徑步驟提示 ✅、鏡頭聚焦 ⏳）
-- [ ] 階段五：部署 GitHub Pages
+- [x] 階段四：UI（起點/終點下拉 + 路徑步驟提示 + 鏡頭聚焦）✅ 2026-09-18
+- [x] 階段五：部署 GitHub Pages → https://allen54a0.github.io/taipei-station-maze/ ✅ 2026-09-18
 
 ## 範圍拍板（2026-09-18 與 Allen 對齊）
 | 項目 | 決策 |
@@ -42,7 +42,7 @@
 | 層級 | 平台 | 位置 | 讀取時機 |
 |------|------|------|---------|
 | L1 | 本地（Dropbox） | `AGENTS.md` ＋ `handoff.md` | 每個 session |
-| L2 | GitHub | https://github.com/allen54a0/taipei-station-maze （私有） | 指定時 |
+| L2 | GitHub | https://github.com/allen54a0/taipei-station-maze （公開）＋ Pages: https://allen54a0.github.io/taipei-station-maze/ | 指定時 |
 | L3 | Obsidian | 未啟用（初始化時本機 Obsidian MCP 連線失敗；之後在有 Obsidian 的電腦說「補建第三層級」） | — |
 
 ## 工作約定
