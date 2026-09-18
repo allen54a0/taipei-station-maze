@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>台北車站 3D 迷宮</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <aside id="ui">
+      <header>
+        <h1>台北車站 3D 迷宮</h1>
+        <p class="subtitle">MVP · 核心樞紐 B4 ~ 2F</p>
+      </header>
+
+      <section id="controls">
+        <p class="hint">滑鼠左鍵拖曳：旋轉　·　右鍵：平移　·　滾輪：縮放</p>
+      </section>
+
+      <section id="legend">
+        <h2>樓層</h2>
+        <ul id="legend-list"><!-- main.js 動態填入 --></ul>
+      </section>
+
+      <footer>
+        <small>階段一：骨架驗證（尋路 UI 尚未實作）</small>
+      </footer>
+    </aside>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

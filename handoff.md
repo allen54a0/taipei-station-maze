@@ -7,19 +7,23 @@
 - 狀態：🔥活躍
 
 ## ⏯️ 目前做到哪
-專案初始化完成（L1 本地藍圖 + L2 GitHub 私有 repo）。範圍已與 Allen 對齊：**MVP 核心樞紐、半透明 Box 抽象幾何、憑常識建圖、Vite + 原生 Three.js**。尚未寫任何程式碼。
+**階段一完成**——Vite + Three.js 骨架跑起來，6 層樓半透明 Box + 節點占位球 + OrbitControls 都 OK。左上 UI 面板已顯示樓層圖例；dev server 在 http://localhost:5173 驗證無 console error。
 
 ## 🚦 目前狀態
 - L1 本地：`AGENTS.md` ＋ `handoff.md` 就位；四個李廠長子資料夾建好
 - L2 GitHub：`allen54a0/taipei-station-maze`（私有）已建、已 push
 - L3 Obsidian：**未建**（本機 Obsidian MCP 連線失敗；之後在有 Obsidian 的電腦補建）
-- Vite 環境：**尚未建立**
+- Vite 環境：✅ 已建（three ^0.186、vite ^8.3），`npm run dev` 可跑
+- 3D 場景：✅ 6 層樓半透明 Box × 底層網格 × 樓層標籤（B4~2F）× 節點占位球（7 個 stub）
+- 尋路：❌ 尚未實作
+- UI：只有左上圖例；起點/終點下拉尚未實作
 
-## ➡️ 下一步
-1. 建立 Vite 專案骨架：`npm create vite@latest . -- --template vanilla`（在專案根執行；同意覆寫 index.html）
-2. 安裝依賴：`npm install three`
-3. 在 `src/main.js` 建最小 Three.js 場景（半透明 Box × 6 層樓，OrbitControls 可轉可縮）
-4. 開一個 `src/data/graph.js` 資料檔，先寫 5 條線月台 + 大廳的節點 stub（不用完整）
+## ➡️ 下一步（階段二：節點資料建圖）
+1. 把 `src/data/graph.js` 的節點從 7 個 stub 擴充到約 30 個（月台頭尾、閘門、電扶梯、穿堂連通口）
+2. 填 `EDGES` 陣列：垂直（電扶梯／樓梯連接不同樓層）＋ 水平（同層穿堂連通），cost 用步行距離估算
+3. 加 raycaster：滑鼠點節點顯示 tooltip，方便肉眼校正位置
+4. 補齊各線月台的官方中文站名（例如「月台 1A」、「M8 出口」等）
+5. 隱形節點層與樓層 Box 疊放：確認節點球都在對應樓層的 Box 內
 
 ## ⚠️ 注意事項
 - 專案在 **Dropbox 底下**，git 已加 `windows.appendAtomically false` 避免同步衝突；請勿手動改 git config
