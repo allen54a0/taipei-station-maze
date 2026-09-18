@@ -68,6 +68,9 @@ scene.add(pathGroup);
 /** @type {{ curve: THREE.Curve, t: number, speed: number, marker: THREE.Mesh } | null} */
 let pathAnim = null;
 
+/** @type {{ targetPos: THREE.Vector3, targetTarget: THREE.Vector3 } | null} */
+let cameraAnim = null;
+
 populatePathSelects();
 setupPathfinderUI();
 runFind();   // 開場預設就顯示一條路徑
@@ -87,6 +90,17 @@ function tick() {
     pathAnim.curve.getPointAt(tt, pathAnim.marker.position);
     // 微微上下浮動,讓亮點看起來活的
     pathAnim.marker.position.y += Math.sin(now * 0.005) * 0.4;
+  }
+
+  // 鏡頭平滑聚焦到路徑（一階指數 lerp）
+  if (cameraAnim) {
+    const s = 0.06;
+    camera.position.lerp(cameraAnim.targetPos, s);
+    controls.target.lerp(cameraAnim.targetTarget, s);
+    if (camera.position.distanceTo(cameraAnim.targetPos) < 0.4 &&
+        controls.target.distanceTo(cameraAnim.targetTarget) < 0.4) {
+      cameraAnim = null;
+    }
   }
 
   controls.update();
@@ -366,6 +380,24 @@ function drawPath(result) {
   addHalo(points[points.length - 1],    0xff6644);
 
   pathAnim = { curve, t: 0, speed: 0.35, marker };
+  focusOnPath(points);
+}
+
+function focusOnPath(points) {
+  if (points.length === 0) return;
+  const box = new THREE.Box3();
+  for (const p of points) box.expandByPoint(p);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const diag = Math.max(size.length(), 60);   // 至少 60 單位避免鏡頭貼太近
+  // 保持當前鏡頭方向,只把 target 移到路徑中心、距離依對角推
+  const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+  if (dir.lengthSq() < 0.01) dir.set(0.7, 0.5, 0.7).normalize();
+  const distance = diag * 1.55;
+  cameraAnim = {
+    targetPos: new THREE.Vector3().copy(center).add(dir.multiplyScalar(distance)),
+    targetTarget: center.clone(),
+  };
 }
 
 function addHalo(pos, color) {
