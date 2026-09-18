@@ -1,0 +1,28 @@
+# 依賴與建置產物
+node_modules/
+dist/
+.vite/
+*.log
+npm-debug.log*
+
+# 環境變數 / 密鑰
+.env
+.env.local
+.env.*.local
+*.key
+credentials.*
+
+# Windows / Dropbox
+desktop.ini
+Thumbs.db
+*.tmp
+~$*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
